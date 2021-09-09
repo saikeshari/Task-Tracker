@@ -43,6 +43,9 @@ export default {
     },
     toggleAddTask() {
       this.showAddTask = !this.showAddTask;
+    },
+    async fetchTasks() {
+      const res = await fetch('http://localhost:5000/tasks')
     }
   },
   created() {
