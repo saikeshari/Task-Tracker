@@ -1,0 +1,84 @@
+<template>
+    <AddTask v-show="showAddTask" @add-task="AddTask"/>
+  <Tasks @toggle-reminder="toggleReminder" @delete-task="deleteTask" :tasks="tasks" />
+</template>
+
+<script>
+import Tasks from '../components/Tasks.vue'
+import AddTask from '../components/AddTask.vue'
+
+export default {
+  name: 'Home',
+  props:{
+      showAddTask:Boolean
+  },
+  components: {
+    Tasks,
+    AddTask
+  },
+  data() {
+    return {
+      tasks : []
+    }
+  },
+  methods:{
+    async deleteTask(id) {
+      if(confirm('Are you sure?'))
+      {
+        const res=await fetch(`api/tasks/${id}`,{
+          method:'DELETE',
+        })
+
+        res.status === 200 ?  (this.tasks = this.tasks.filter((task) => task.id != id)) : alert("Error in deleting");
+      }
+    },
+    async toggleReminder(id){
+
+      const res=await this.fetchTask(id);
+      const newTask= {...res, reminder:!res.reminder}
+
+      const dat=await fetch(`api/tasks/${id}`, {
+        method:'PUT',
+        headers:{
+          'Content-type':'application/json',
+        },
+        body: JSON.stringify(newTask)
+      })
+
+      const data=await dat.json();
+
+      this.tasks = this.tasks.map((task) =>
+      task.id === id ? {...task,reminder : data.reminder} : task 
+      )
+    },
+    async AddTask(newTask) {
+
+      const res=await fetch('api/tasks', {
+        method:'POST',
+        headers:{
+          'Content-type':'application/json',
+        },
+        body: JSON.stringify(newTask)
+      })
+
+      const data= await res.json();
+
+      this.tasks=[...this.tasks,data];
+    },
+    async fetchTasks() {
+      const res = await fetch('api/tasks')
+      const data=await res.json();
+      return data;
+    },
+    async fetchTask(id) {
+      const res = await fetch(`api/tasks/${id}`)
+      const data=await res.json();
+      return data;
+    }
+  },
+  async created() {
+    this.tasks = await this.fetchTasks();
+  }
+}
+
+</script>
